@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo Admin</title>
+<title>Bingo Pro</title>
 
 <style>
     body {
@@ -12,7 +12,9 @@
         padding: 20px;
         background: #e8e8e8;
         text-align: center;
+        transition: 0.4s;
     }
+
     .card {
         background: white;
         padding: 20px;
@@ -20,16 +22,29 @@
         max-width: 450px;
         margin: auto;
         box-shadow: 0 0 15px rgba(0,0,0,0.12);
+        transition: 0.3s;
     }
-    h2 {
-        margin-top: 0;
-    }
+
+    .hidden { display:none; }
+
+    h2 { margin-top: 0; }
+
+    /* Número grande */
     #currentNumber {
         font-size: 80px;
         color: #25D366;
         font-weight: bold;
         margin: 20px 0;
     }
+
+    /* Últimos números */
+    #lastNumbers {
+        margin-bottom: 20px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #444;
+    }
+
     button {
         padding: 15px;
         width: 100%;
@@ -39,14 +54,12 @@
         cursor: pointer;
         margin-bottom: 15px;
     }
-    #drawBtn {
-        background: #25D366;
-        color: white;
-    }
-    #resetBtn {
-        background: #d9534f;
-        color: white;
-    }
+
+    #drawBtn { background: #25D366; color:white; }
+    #resetBtn { background: #d9534f; color:white; }
+    #shareBtn { background:#0088ff; color:white; }
+
+    /* Historial */
     .numbersBox {
         margin-top: 20px;
         background: #f7f7f7;
@@ -65,67 +78,183 @@
         font-size: 18px;
         font-weight: bold;
     }
+
+    /* Animación bola */
+    #ball {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background:#25D366;
+        margin: auto;
+        margin-top: 15px;
+        animation: spin 1.2s infinite linear;
+        color:white;
+        line-height:80px;
+        font-size:35px;
+        font-weight:bold;
+        display:none;
+    }
+
+    @keyframes spin {
+        from { transform:rotate(0deg); }
+        to { transform:rotate(360deg); }
+    }
+
+    /* Modo oscuro */
+    body.dark { background:#111; color:white; }
+    body.dark .card { background:#222; color:white; }
+    body.dark .numbersBox { background:#333; }
 </style>
 </head>
-
 <body>
 
-<div class="card">
-    <h2>🎰 Panel de Bingo</h2>
-    <p>Números del 1 al 75</p>
+<!-- PANTALLA INICIO -->
+<div id="startScreen" class="card">
+    <h2>🎰 BINGO PRO</h2>
+    <p>Selecciona el modo</p>
+
+    <button onclick="openAdmin()">🎛 MODO ADMIN</button>
+    <button onclick="openPlayer()">🎟 MODO JUGADOR</button>
+</div>
+
+<!-- PANEL ADMIN -->
+<div id="adminPanel" class="card hidden">
+
+    <button onclick="goHome()">⬅️ Volver</button>
+
+    <h2>🎛 Panel Admin</h2>
+
+    <div id="ball"></div>
 
     <div id="currentNumber">--</div>
 
-    <button id="drawBtn" onclick="drawNumber()">🎲 Sacar número</button>
-    <button id="resetBtn" onclick="resetGame()">🔁 Reiniciar partido</button>
+    <div id="lastNumbers">Últimos: --</div>
 
-    <h3>Números ya salidos:</h3>
+    <button id="drawBtn" onclick="drawNumber()">🎲 Sacar número</button>
+    <button id="resetBtn" onclick="resetGame()">🔁 Reiniciar partida</button>
+    <button id="shareBtn" onclick="shareWA()">📤 Compartir por WhatsApp</button>
+    <button onclick="toggleDark()">🌙 Modo oscuro</button>
+
+    <h3>Números salidos:</h3>
     <div class="numbersBox" id="history"></div>
 </div>
 
-<script>
-let numbers = Array.from({length: 75}, (_, i) => i + 1);
-let used = [];
+<!-- CARTÓN JUGADOR -->
+<div id="playerPanel" class="card hidden">
+    <button onclick="goHome()">⬅️ Volver</button>
+    <h2>🎟 Cartón de Jugador</h2>
+    <p>Genera tu cartón</p>
 
-function drawNumber() {
-    if (numbers.length === 0) {
-        alert("Ya salieron todos los números 😄");
+    <button onclick="generateCard()">🧩 Nuevo Cartón</button>
+
+    <div id="playerCard"></div>
+
+    <button onclick="toggleDark()">🌙 Modo oscuro</button>
+</div>
+
+<script>
+let numbers = Array.from({length:75}, (_,i)=>i+1);
+let used = [];
+let audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
+
+function goHome(){
+    document.getElementById("startScreen").classList.remove("hidden");
+    document.getElementById("adminPanel").classList.add("hidden");
+    document.getElementById("playerPanel").classList.add("hidden");
+}
+
+function openAdmin(){
+    document.getElementById("startScreen").classList.add("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
+}
+
+function openPlayer(){
+    document.getElementById("startScreen").classList.add("hidden");
+    document.getElementById("playerPanel").classList.remove("hidden");
+}
+
+function drawNumber(){
+    if(numbers.length === 0){
+        alert("Ya salieron todos los números");
         return;
     }
 
-    let index = Math.floor(Math.random() * numbers.length);
-    let number = numbers[index];
+    document.getElementById("ball").style.display = "block";
 
-    // Mover número a la lista de usados
-    numbers.splice(index, 1);
-    used.push(number);
+    setTimeout(()=>{
+        let index = Math.floor(Math.random()*numbers.length);
+        let number = numbers[index];
 
-    // Mostrar número actual
-    document.getElementById("currentNumber").innerHTML = number;
+        numbers.splice(index,1);
+        used.push(number);
 
-    // Actualizar historial
-    updateHistory();
+        document.getElementById("ball").style.display = "none";
+        document.getElementById("currentNumber").innerHTML = number;
+        audio.play();
+
+        updateHistory();
+        updateLast();
+        readNumber(number);
+
+    }, 1200);
 }
 
-function updateHistory() {
+function updateHistory(){
     let box = document.getElementById("history");
     box.innerHTML = "";
-
-    used.sort((a,b)=>a-b).forEach(num => {
-        let div = document.createElement("div");
-        div.className = "numberItem";
-        div.textContent = num;
-        box.appendChild(div);
+    used.sort((a,b)=>a-b).forEach(num=>{
+        let d = document.createElement("div");
+        d.className="numberItem";
+        d.textContent=num;
+        box.appendChild(d);
     });
 }
 
-function resetGame() {
-    if (!confirm("¿Seguro que deseas reiniciar la partida?")) return;
+function updateLast(){
+    let last = used.slice(-5);
+    document.getElementById("lastNumbers").innerHTML =
+        "Últimos: " + last.join(", ");
+}
 
-    numbers = Array.from({length: 75}, (_, i) => i + 1);
+function resetGame(){
+    if(!confirm("¿Seguro que deseas reiniciar?")) return;
+
+    numbers = Array.from({length:75}, (_,i)=>i+1);
     used = [];
-    document.getElementById("currentNumber").innerHTML = "--";
-    document.getElementById("history").innerHTML = "";
+    document.getElementById("history").innerHTML="";
+    document.getElementById("currentNumber").innerHTML="--";
+    document.getElementById("lastNumbers").innerHTML="Últimos: --";
+}
+
+function shareWA(){
+    let text = `Panel de Bingo activo 🎰\nÚltimo número: ${used[used.length-1] || "--"}\nLink: ${window.location.href}`;
+    window.location.href = "https://wa.me/?text="+encodeURIComponent(text);
+}
+
+function toggleDark(){
+    document.body.classList.toggle("dark");
+}
+
+function generateCard(){
+    let nums = [];
+    while(nums.length<24){
+        let n = Math.floor(Math.random()*75)+1;
+        if(!nums.includes(n)) nums.push(n);
+    }
+
+    let cardHTML = "<h3>Tu cartón:</h3><div>";
+    nums.forEach(n=>{
+        cardHTML += `<div class="numberItem">${n}</div>`;
+    });
+    cardHTML += "</div>";
+
+    document.getElementById("playerCard").innerHTML = cardHTML;
+}
+
+function readNumber(n){
+    let msg = new SpeechSynthesisUtterance("Número " + n);
+    msg.lang = "es-ES";
+    speechSynthesis.speak(msg);
 }
 </script>
 
