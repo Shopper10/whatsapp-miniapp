@@ -3,49 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo MiniApp</title>
+<title>Bingo Admin</title>
+
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #f2f2f2;
         margin: 0;
         padding: 20px;
+        background: #e8e8e8;
         text-align: center;
     }
     .card {
         background: white;
         padding: 20px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 400px;
-        margin: 0 auto;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border-radius: 15px;
+        max-width: 450px;
+        margin: auto;
+        box-shadow: 0 0 15px rgba(0,0,0,0.12);
+    }
+    h2 {
+        margin-top: 0;
+    }
+    #currentNumber {
+        font-size: 80px;
+        color: #25D366;
+        font-weight: bold;
+        margin: 20px 0;
     }
     button {
-        margin-top: 20px;
         padding: 15px;
         width: 100%;
         border: none;
+        font-size: 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-bottom: 15px;
+    }
+    #drawBtn {
         background: #25D366;
         color: white;
+    }
+    #resetBtn {
+        background: #d9534f;
+        color: white;
+    }
+    .numbersBox {
+        margin-top: 20px;
+        background: #f7f7f7;
         border-radius: 10px;
+        padding: 15px;
+        min-height: 80px;
+        box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+    }
+    .numberItem {
+        display: inline-block;
+        background: #25D366;
+        color: white;
+        padding: 8px 12px;
+        margin: 5px;
+        border-radius: 8px;
         font-size: 18px;
+        font-weight: bold;
     }
 </style>
 </head>
+
 <body>
 
 <div class="card">
-    <h2>🎰 Bingo Online</h2>
-    <p>Partidas desde <b>50 Bs</b></p>
-    <p>Pagos directo a tu cuenta</p>
+    <h2>🎰 Panel de Bingo</h2>
+    <p>Números del 1 al 75</p>
 
-    <button onclick="openWhatsApp()">Entrar al Bingo</button>
+    <div id="currentNumber">--</div>
+
+    <button id="drawBtn" onclick="drawNumber()">🎲 Sacar número</button>
+    <button id="resetBtn" onclick="resetGame()">🔁 Reiniciar partido</button>
+
+    <h3>Números ya salidos:</h3>
+    <div class="numbersBox" id="history"></div>
 </div>
 
 <script>
-function openWhatsApp() {
-    window.location.href = "https://wa.me/584249800000?text=Hola%20quiero%20jugar%20bingo";
+let numbers = Array.from({length: 75}, (_, i) => i + 1);
+let used = [];
+
+function drawNumber() {
+    if (numbers.length === 0) {
+        alert("Ya salieron todos los números 😄");
+        return;
+    }
+
+    let index = Math.floor(Math.random() * numbers.length);
+    let number = numbers[index];
+
+    // Mover número a la lista de usados
+    numbers.splice(index, 1);
+    used.push(number);
+
+    // Mostrar número actual
+    document.getElementById("currentNumber").innerHTML = number;
+
+    // Actualizar historial
+    updateHistory();
+}
+
+function updateHistory() {
+    let box = document.getElementById("history");
+    box.innerHTML = "";
+
+    used.sort((a,b)=>a-b).forEach(num => {
+        let div = document.createElement("div");
+        div.className = "numberItem";
+        div.textContent = num;
+        box.appendChild(div);
+    });
+}
+
+function resetGame() {
+    if (!confirm("¿Seguro que deseas reiniciar la partida?")) return;
+
+    numbers = Array.from({length: 75}, (_, i) => i + 1);
+    used = [];
+    document.getElementById("currentNumber").innerHTML = "--";
+    document.getElementById("history").innerHTML = "";
 }
 </script>
 
