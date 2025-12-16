@@ -3,258 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo Pro</title>
-
+<title>Bingo Familiar</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: #e8e8e8;
-        text-align: center;
-        transition: 0.4s;
-    }
-
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        max-width: 450px;
-        margin: auto;
-        box-shadow: 0 0 15px rgba(0,0,0,0.12);
-        transition: 0.3s;
-    }
-
-    .hidden { display:none; }
-
-    h2 { margin-top: 0; }
-
-    /* Número grande */
-    #currentNumber {
-        font-size: 80px;
-        color: #25D366;
-        font-weight: bold;
-        margin: 20px 0;
-    }
-
-    /* Últimos números */
-    #lastNumbers {
-        margin-bottom: 20px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #444;
-    }
-
-    button {
-        padding: 15px;
-        width: 100%;
-        border: none;
-        font-size: 18px;
-        border-radius: 10px;
-        cursor: pointer;
-        margin-bottom: 15px;
-    }
-
-    #drawBtn { background: #25D366; color:white; }
-    #resetBtn { background: #d9534f; color:white; }
-    #shareBtn { background:#0088ff; color:white; }
-
-    /* Historial */
-    .numbersBox {
-        margin-top: 20px;
-        background: #f7f7f7;
-        border-radius: 10px;
-        padding: 15px;
-        min-height: 80px;
-        box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
-    }
-    .numberItem {
-        display: inline-block;
-        background: #25D366;
-        color: white;
-        padding: 8px 12px;
-        margin: 5px;
-        border-radius: 8px;
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-    /* Animación bola */
-    #ball {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background:#25D366;
-        margin: auto;
-        margin-top: 15px;
-        animation: spin 1.2s infinite linear;
-        color:white;
-        line-height:80px;
-        font-size:35px;
-        font-weight:bold;
-        display:none;
-    }
-
-    @keyframes spin {
-        from { transform:rotate(0deg); }
-        to { transform:rotate(360deg); }
-    }
-
-    /* Modo oscuro */
-    body.dark { background:#111; color:white; }
-    body.dark .card { background:#222; color:white; }
-    body.dark .numbersBox { background:#333; }
+body{
+  font-family: Arial, sans-serif;
+  background:#111;
+  color:#fff;
+  text-align:center;
+  padding:20px;
+}
+h1{color:#00ff99;}
+#numero{
+  font-size:80px;
+  margin:20px;
+  background:#222;
+  padding:30px;
+  border-radius:20px;
+}
+button{
+  padding:15px 25px;
+  font-size:18px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  background:#00ff99;
+  color:#000;
+}
+button:active{transform:scale(0.95);}
+#historial{
+  margin-top:20px;
+  font-size:18px;
+}
+.small{font-size:14px;color:#aaa;}
 </style>
 </head>
+
 <body>
 
-<!-- PANTALLA INICIO -->
-<div id="startScreen" class="card">
-    <h2>🎰 BINGO CALOA</h2>
-    <p>Selecciona el modo</p>
+<h1>🎱 Bingo Familiar</h1>
 
-    <button onclick="openAdmin()">🎛 MODO ADMIN</button>
-    <button onclick="openPlayer()">🎟 MODO JUGADOR</button>
-</div>
+<div id="numero">–</div>
 
-<!-- PANEL ADMIN -->
-<div id="adminPanel" class="card hidden">
+<button onclick="sacarNumero()">🎲 Sacar número</button>
+<button onclick="reiniciar()">🔁 Reiniciar</button>
+<button onclick="compartir()">📲 Compartir</button>
 
-    <button onclick="goHome()">⬅️ Volver</button>
+<div id="historial"></div>
 
-    <h2>🎛 Panel Admin</h2>
-
-    <div id="ball"></div>
-
-    <div id="currentNumber">--</div>
-
-    <div id="lastNumbers">Últimos: --</div>
-
-    <button id="drawBtn" onclick="drawNumber()">🎲 Sacar número</button>
-    <button id="resetBtn" onclick="resetGame()">🔁 Reiniciar partida</button>
-    <button id="shareBtn" onclick="shareWA()">📤 Compartir por WhatsApp</button>
-    <button onclick="toggleDark()">🌙 Modo oscuro</button>
-
-    <h3>Números salidos:</h3>
-    <div class="numbersBox" id="history"></div>
-</div>
-
-<!-- CARTÓN JUGADOR -->
-<div id="playerPanel" class="card hidden">
-    <button onclick="goHome()">⬅️ Volver</button>
-    <h2>🎟 Cartón de Jugador</h2>
-    <p>Genera tu cartón</p>
-
-    <button onclick="generateCard()">🧩 Nuevo Cartón</button>
-
-    <div id="playerCard"></div>
-
-    <button onclick="toggleDark()">🌙 Modo oscuro</button>
-</div>
+<p class="small">Comparte este link en tu grupo de WhatsApp</p>
 
 <script>
-let numbers = Array.from({length:75}, (_,i)=>i+1);
-let used = [];
-let audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
+let numeros = [];
+let usados = [];
 
-function goHome(){
-    document.getElementById("startScreen").classList.remove("hidden");
-    document.getElementById("adminPanel").classList.add("hidden");
-    document.getElementById("playerPanel").classList.add("hidden");
+for(let i=1;i<=75;i++){numeros.push(i);}
+
+function sacarNumero(){
+  if(numeros.length===0){
+    alert("Ya salieron todos los números");
+    return;
+  }
+  let index = Math.floor(Math.random()*numeros.length);
+  let n = numeros.splice(index,1)[0];
+  usados.push(n);
+
+  document.getElementById("numero").innerText = n;
+  document.getElementById("historial").innerText =
+    "Números: " + usados.join(", ");
+
+  let voz = new SpeechSynthesisUtterance("Número " + n);
+  speechSynthesis.speak(voz);
+
+  let audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+  audio.play();
 }
 
-function openAdmin(){
-    document.getElementById("startScreen").classList.add("hidden");
-    document.getElementById("adminPanel").classList.remove("hidden");
+function reiniciar(){
+  if(confirm("¿Reiniciar partida?")){
+    numeros=[];
+    usados=[];
+    for(let i=1;i<=75;i++){numeros.push(i);}
+    document.getElementById("numero").innerText="–";
+    document.getElementById("historial").innerText="";
+  }
 }
 
-function openPlayer(){
-    document.getElementById("startScreen").classList.add("hidden");
-    document.getElementById("playerPanel").classList.remove("hidden");
-}
-
-function drawNumber(){
-    if(numbers.length === 0){
-        alert("Ya salieron todos los números");
-        return;
-    }
-
-    document.getElementById("ball").style.display = "block";
-
-    setTimeout(()=>{
-        let index = Math.floor(Math.random()*numbers.length);
-        let number = numbers[index];
-
-        numbers.splice(index,1);
-        used.push(number);
-
-        document.getElementById("ball").style.display = "none";
-        document.getElementById("currentNumber").innerHTML = number;
-        audio.play();
-
-        updateHistory();
-        updateLast();
-        readNumber(number);
-
-    }, 1200);
-}
-
-function updateHistory(){
-    let box = document.getElementById("history");
-    box.innerHTML = "";
-    used.sort((a,b)=>a-b).forEach(num=>{
-        let d = document.createElement("div");
-        d.className="numberItem";
-        d.textContent=num;
-        box.appendChild(d);
-    });
-}
-
-function updateLast(){
-    let last = used.slice(-5);
-    document.getElementById("lastNumbers").innerHTML =
-        "Últimos: " + last.join(", ");
-}
-
-function resetGame(){
-    if(!confirm("¿Seguro que deseas reiniciar?")) return;
-
-    numbers = Array.from({length:75}, (_,i)=>i+1);
-    used = [];
-    document.getElementById("history").innerHTML="";
-    document.getElementById("currentNumber").innerHTML="--";
-    document.getElementById("lastNumbers").innerHTML="Últimos: --";
-}
-
-function shareWA(){
-    let text = `Panel de Bingo activo 🎰\nÚltimo número: ${used[used.length-1] || "--"}\nLink: ${window.location.href}`;
-    window.location.href = "https://wa.me/?text="+encodeURIComponent(text);
-}
-
-function toggleDark(){
-    document.body.classList.toggle("dark");
-}
-
-function generateCard(){
-    let nums = [];
-    while(nums.length<24){
-        let n = Math.floor(Math.random()*75)+1;
-        if(!nums.includes(n)) nums.push(n);
-    }
-
-    let cardHTML = "<h3>Tu cartón:</h3><div>";
-    nums.forEach(n=>{
-        cardHTML += `<div class="numberItem">${n}</div>`;
-    });
-    cardHTML += "</div>";
-
-    document.getElementById("playerCard").innerHTML = cardHTML;
-}
-
-function readNumber(n){
-    let msg = new SpeechSynthesisUtterance("Número " + n);
-    msg.lang = "es-ES";
-    speechSynthesis.speak(msg);
+function compartir(){
+  let url = window.location.href;
+  window.open(`https://wa.me/?text=Jugamos%20bingo%20aquí:%20${url}`);
 }
 </script>
 
