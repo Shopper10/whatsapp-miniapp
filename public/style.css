@@ -1,0 +1,20 @@
+#carton {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+  max-width: 360px;
+  margin: 20px auto;
+}
+
+.celda {
+  background: #111;
+  border: 1px solid #00ff99;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.celda.marcada {
+  background: #00ff99;
+  color: #000;
+}
