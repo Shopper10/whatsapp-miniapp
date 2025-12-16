@@ -1,204 +1,24 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Bingo PRO 90</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="/socket.io/socket.io.js"></script>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: radial-gradient(circle, #0b3d2e, #02160f);
-  color: #fff;
-  text-align: center;
-}
-
-header {
-  background: #1abc9c;
-  padding: 12px;
-  font-size: 22px;
-  font-weight: bold;
-}
-
-#numero {
-  font-size: 90px;
-  margin: 20px auto;
-  background: #e74c3c;
-  width: 140px;
-  height: 140px;
-  line-height: 140px;
-  border-radius: 50%;
-  animation: pop 0.4s ease;
-}
-
-@keyframes pop {
-  0% { transform: scale(0.5); }
-  100% { transform: scale(1); }
-}
-
-button {
-  padding: 15px 25px;
-  font-size: 18px;
-  border: none;
-  border-radius: 10px;
-  margin: 6px;
-  background: #f1c40f;
-  font-weight: bold;
-}
-
-button.admin {
-  background: #3498db;
-  color: #fff;
-}
-
-button:disabled {
-  opacity: 0.4;
-}
-
-#adminTag {
-  background: #3498db;
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 6px;
-  margin-top: 6px;
-  font-size: 14px;
-}
-
-#carton {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin: 20px;
-}
-
-.celda {
-  background: #ecf0f1;
-  color: #000;
-  padding: 14px;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.marcado {
-  background: #2ecc71;
-  color: #fff;
-}
-
-#historial {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin: 10px;
-}
-
-.bola {
-  width: 38px;
-  height: 38px;
-  background: #2c3e50;
-  border-radius: 50%;
-  line-height: 38px;
-  margin: 4px;
-  font-size: 14px;
-}
-</style>
+  <title>Bingo Británico 90</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>
-🎱 BINGO PRO 90
-<div id="adminTag" style="display:none">👑 ADMIN</div>
-</header>
+<h1>🎱 Bingo Británico 90</h1>
 
-<div id="numero">–</div>
+<div id="bola-numero">--</div>
 
-<button id="btnSacar" class="admin">🎲 SACAR NÚMERO</button>
+<div class="botones">
+  <button id="auto">▶ Auto</button>
+  <button id="pausa">⏸ Pausa</button>
+  <button id="manual">🎲 Manual</button>
+</div>
 
-<h3>Tu cartón</h3>
-<div id="carton"></div>
-
-<h3>Números salidos</h3>
 <div id="historial"></div>
 
-<audio id="sonidoBola" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="sonidoWin" src="https://actions.google.com/sounds/v1/cartoon/concussive_drum_hit.ogg"></audio>
-
-<script>
-const socket = io();
-
-const numeroDiv = document.getElementById("numero");
-const cartonDiv = document.getElementById("carton");
-const historialDiv = document.getElementById("historial");
-const btn = document.getElementById("btnSacar");
-const adminTag = document.getElementById("adminTag");
-
-const sBola = document.getElementById("sonidoBola");
-const sWin = document.getElementById("sonidoWin");
-
-let carton = [];
-let marcados = [];
-
-socket.on("admin", esAdmin => {
-  if (esAdmin) {
-    adminTag.style.display = "inline-block";
-  } else {
-    btn.disabled = true;
-  }
-});
-
-socket.on("carton", data => {
-  carton = data;
-  marcados = [];
-  cartonDiv.innerHTML = "";
-  data.forEach(n => {
-    const d = document.createElement("div");
-    d.className = "celda";
-    d.innerText = n;
-    d.onclick = () => marcar(n, d);
-    cartonDiv.appendChild(d);
-  });
-});
-
-socket.on("numero", num => {
-  numeroDiv.innerText = num;
-  sBola.play();
-
-  const b = document.createElement("div");
-  b.className = "bola";
-  b.innerText = num;
-  historialDiv.prepend(b);
-
-  document.querySelectorAll(".celda").forEach(c => {
-    if (parseInt(c.innerText) === num) {
-      c.classList.add("marcado");
-      if (!marcados.includes(num)) marcados.push(num);
-      verificar();
-    }
-  });
-});
-
-function marcar(n, celda) {
-  if (!marcados.includes(n)) {
-    celda.classList.add("marcado");
-    marcados.push(n);
-    verificar();
-  }
-}
-
-function verificar() {
-  if (marcados.length >= 15) {
-    sWin.play();
-    alert("🏆 BINGO COMPLETO");
-  }
-}
-
-btn.onclick = () => {
-  socket.emit("sacar");
-};
-</script>
-
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
