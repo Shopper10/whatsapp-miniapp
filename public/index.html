@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bingo Familiar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+    }
+    h1 { color: #00ff99; }
+    #numero {
+      font-size: 80px;
+      margin: 20px 0;
+      color: #ffcc00;
+    }
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .admin { background: #00ff99; }
+    .reset { background: #ff4444; color: white; }
+    .bingo { background: #3399ff; color: white; }
+
+    #historial {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .num {
+      width: 40px;
+      margin: 4px;
+      padding: 5px;
+      background: #333;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🎱 Bingo Familiar</h1>
+
+<div id="numero">--</div>
+
+<button class="admin" onclick="sacar()">Sacar Número</button>
+<button class="reset" onclick="reiniciar()">Reiniciar</button>
+<button class="bingo" onclick="bingo()">¡BINGO!</button>
+
+<h3>Números salidos</h3>
+<div id="historial"></div>
+
+<script>
+  const socket = io();
+  const sala = "familia";
+
+  socket.emit("entrarSala", sala);
+
+  socket.on("numero", n => {
+    document.getElementById("numero").innerText = n;
+    agregar(n);
+  });
+
+  socket.on("estado", estado => {
+    document.getElementById("historial").innerHTML = "";
+    estado.salidos.forEach(agregar);
+  });
+
+  socket.on("bingoCantado", jugador => {
+    alert("🎉 BINGO cantado por " + jugador);
+  });
+
+  function sacar() {
+    socket.emit("sacarNumero", sala);
+  }
+
+  function reiniciar() {
+    socket.emit("reiniciar", sala);
+    document.getElementById("numero").innerText = "--";
+  }
+
+  function bingo() {
+    const nombre = prompt("Tu nombre:");
+    if (nombre) {
+      socket.emit("cantarBingo", { sala, jugador: nombre });
+    }
+  }
+
+  function agregar(n) {
+    const d = document.createElement("div");
+    d.className = "num";
+    d.innerText = n;
+    document.getElementById("historial").appendChild(d);
+  }
+</script>
+
+</body>
+</html>
