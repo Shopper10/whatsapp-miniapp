@@ -3,94 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo Familiar</title>
+<title>Bingo Británico 90</title>
 <style>
-body{
-  font-family: Arial, sans-serif;
-  background:#111;
-  color:#fff;
-  text-align:center;
-  padding:20px;
-}
-h1{color:#00ff99;}
-#numero{
-  font-size:80px;
-  margin:20px;
-  background:#222;
-  padding:30px;
-  border-radius:20px;
-}
-button{
-  padding:15px 25px;
-  font-size:18px;
-  margin:10px;
-  border:none;
-  border-radius:10px;
-  background:#00ff99;
-  color:#000;
-}
-button:active{transform:scale(0.95);}
-#historial{
-  margin-top:20px;
-  font-size:18px;
-}
-.small{font-size:14px;color:#aaa;}
+body{margin:0;font-family:Arial;background:#000;color:#fff;text-align:center}
+header{padding:10px;background:#111}
+h1{color:#00ff99}
+#bola{font-size:90px;margin:10px}
+button{padding:12px 18px;margin:5px;font-size:16px;border:none;border-radius:8px;background:#00ff99}
+.panel{margin:10px}
+.carton{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:10px auto;max-width:360px}
+.celda{border:1px solid #444;height:32px;line-height:32px}
+.marcado{background:#00ff99;color:#000;font-weight:bold}
+.salido{background:#333}
+#historial{font-size:12px;max-height:60px;overflow:auto}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<h1>🎱 Bingo Familiar</h1>
+<header>
+<h1>🎱 Bingo Británico 90</h1>
+<div id="bola">–</div>
+</header>
 
-<div id="numero">–</div>
+<div class="panel">
+<button onclick="startAuto()">▶ Auto</button>
+<button onclick="stopAuto()">⏸ Pausa</button>
+<button onclick="sacar()">🎲 Manual</button>
+<button onclick="reset()">🔁 Reiniciar</button>
+</div>
 
-<button onclick="sacarNumero()">🎲 Sacar número</button>
-<button onclick="reiniciar()">🔁 Reiniciar</button>
+<div class="panel">
+<button onclick="nuevoCarton()">🧾 Nuevo cartón</button>
+<button onclick="cantar()">📣 CANTAR BINGO</button>
 <button onclick="compartir()">📲 Compartir</button>
+</div>
 
 <div id="historial"></div>
-
-<p class="small">Comparte este link en tu grupo de WhatsApp</p>
+<div id="cartones"></div>
 
 <script>
-let numeros = [];
-let usados = [];
+let pool=[...Array(90).keys()].map(i=>i+1)
+let salidos=[]
+let timer=null
+let tiempo=4000
 
-for(let i=1;i<=75;i++){numeros.push(i);}
-
-function sacarNumero(){
-  if(numeros.length===0){
-    alert("Ya salieron todos los números");
-    return;
-  }
-  let index = Math.floor(Math.random()*numeros.length);
-  let n = numeros.splice(index,1)[0];
-  usados.push(n);
-
-  document.getElementById("numero").innerText = n;
-  document.getElementById("historial").innerText =
-    "Números: " + usados.join(", ");
-
-  let voz = new SpeechSynthesisUtterance("Número " + n);
-  speechSynthesis.speak(voz);
-
-  let audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-  audio.play();
+function sacar(){
+ if(!pool.length)return alert("Fin del bingo")
+ let i=Math.floor(Math.random()*pool.length)
+ let n=pool.splice(i,1)[0]
+ salidos.push(n)
+ document.getElementById("bola").innerText=n
+ document.getElementById("historial").innerText="Salidos: "+salidos.join(", ")
+ speechSynthesis.speak(new SpeechSynthesisUtterance("Número "+n))
+ document.querySelectorAll(".celda").forEach(c=>{
+  if(c.innerText==n)c.classList.add("salido")
+ })
 }
 
-function reiniciar(){
-  if(confirm("¿Reiniciar partida?")){
-    numeros=[];
-    usados=[];
-    for(let i=1;i<=75;i++){numeros.push(i);}
-    document.getElementById("numero").innerText="–";
-    document.getElementById("historial").innerText="";
+function startAuto(){
+ if(timer)return
+ timer=setInterval(sacar,tiempo)
+}
+
+function stopAuto(){clearInterval(timer);timer=null}
+
+function reset(){
+ stopAuto()
+ pool=[...Array(90).keys()].map(i=>i+1)
+ salidos=[]
+ document.getElementById("bola").innerText="–"
+ document.getElementById("historial").innerText=""
+ document.getElementById("cartones").innerHTML=""
+}
+
+function nuevoCarton(){
+ let nums=[]
+ while(nums.length<15){
+  let n=Math.floor(Math.random()*90)+1
+  if(!nums.includes(n))nums.push(n)
+ }
+ nums.sort((a,b)=>a-b)
+
+ let grid=Array(27).fill("")
+ nums.forEach(n=>{
+  let c=Math.floor((n-1)/10)
+  let p
+  do{p=Math.floor(Math.random()*3)*9+c}while(grid[p])
+  grid[p]=n
+ })
+
+ let div=document.createElement("div")
+ div.className="carton"
+ grid.forEach(v=>{
+  let d=document.createElement("div")
+  d.className="celda"
+  if(v){
+   d.innerText=v
+   d.onclick=()=>{
+    if(salidos.includes(v))d.classList.toggle("marcado")
+   }
   }
+  div.appendChild(d)
+ })
+ document.getElementById("cartones").appendChild(div)
+}
+
+function cantar(){
+ alert("🎉 BINGO CANTADO\nEl anfitrión debe verificar el cartón.")
 }
 
 function compartir(){
-  let url = window.location.href;
-  window.open(`https://wa.me/?text=Jugamos%20bingo%20aquí:%20${url}`);
+ window.open(`https://wa.me/?text=BINGO%2090%20en%20vivo:%20${location.href}`)
 }
 </script>
 
