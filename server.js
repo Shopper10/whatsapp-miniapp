@@ -1,76 +1,72 @@
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 
 app.use(express.static("public"));
 
-let sala = {
-  admin: null,
-  numeros: [],
-  sacados: [],
-  jugadores: {}
-};
+let numeros = [];
+let historial = [];
+let intervalo = null;
+let adminId = null;
 
-function iniciarJuego() {
-  sala.numeros = Array.from({ length: 90 }, (_, i) => i + 1);
-  sala.sacados = [];
-  sala.jugadores = {};
-  sala.admin = null;
+function resetJuego() {
+  numeros = Array.from({ length: 90 }, (_, i) => i + 1);
+  historial = [];
 }
-
-iniciarJuego();
-
-function sacarNumero() {
-  if (sala.numeros.length === 0) return null;
-  const i = Math.floor(Math.random() * sala.numeros.length);
-  return sala.numeros.splice(i, 1)[0];
-}
+resetJuego();
 
 io.on("connection", socket => {
-
-  // ADMIN
-  if (!sala.admin) {
-    sala.admin = socket.id;
+  // ADMIN REAL
+  if (!adminId) {
+    adminId = socket.id;
     socket.emit("admin", true);
   } else {
     socket.emit("admin", false);
   }
 
-  // Crear cartón (15 números)
-  const carton = [];
-  while (carton.length < 15) {
-    const n = Math.floor(Math.random() * 90) + 1;
-    if (!carton.includes(n)) carton.push(n);
-  }
+  // SINCRONIZAR ESTADO AL ENTRAR
+  socket.emit("sync", {
+    historial,
+    ultimo: historial[historial.length - 1] || null
+  });
 
-  sala.jugadores[socket.id] = carton;
+  socket.on("auto", () => {
+    if (socket.id !== adminId || intervalo) return;
+    intervalo = setInterval(sacarNumero, 3000);
+  });
 
-  socket.emit("carton", carton);
-  socket.emit("estado", sala.sacados);
+  socket.on("pausa", () => {
+    if (socket.id !== adminId) return;
+    clearInterval(intervalo);
+    intervalo = null;
+  });
 
-  socket.on("sacar", () => {
-    if (socket.id !== sala.admin) return;
+  socket.on("manual", () => {
+    if (socket.id !== adminId) return;
+    sacarNumero();
+  });
 
-    const num = sacarNumero();
-    if (!num) return;
-
-    sala.sacados.push(num);
-    io.emit("numero", num);
+  socket.on("reiniciar", () => {
+    if (socket.id !== adminId) return;
+    clearInterval(intervalo);
+    intervalo = null;
+    resetJuego();
+    io.emit("reinicio");
   });
 
   socket.on("disconnect", () => {
-    delete sala.jugadores[socket.id];
-    if (socket.id === sala.admin) {
-      iniciarJuego();
-      io.emit("reset");
-    }
+    if (socket.id === adminId) adminId = null;
   });
+
+  function sacarNumero() {
+    if (numeros.length === 0) return;
+    const i = Math.floor(Math.random() * numeros.length);
+    const n = numeros.splice(i, 1)[0];
+    historial.push(n);
+    io.emit("numero", n);
+  }
 });
 
-server.listen(process.env.PORT || 3000, () => {
-  console.log("Bingo PRO activo");
-});
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => console.log("Bingo estable en puerto", PORT));
