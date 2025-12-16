@@ -1,24 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
   <title>Bingo Británico 90</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <h1>🎱 Bingo Británico 90</h1>
 
-<div id="bola-numero">--</div>
+<!-- BOLA PRINCIPAL -->
+<div id="bola">--</div>
 
+<!-- BOTONES (solo visibles para ADMIN) -->
 <div class="botones">
-  <button id="auto">▶ Auto</button>
-  <button id="pausa">⏸ Pausa</button>
-  <button id="manual">🎲 Manual</button>
+  <button onclick="auto()">▶ Auto</button>
+  <button onclick="pausa()">⏸ Pausa</button>
+  <button onclick="manual()">🎲 Manual</button>
+  <button onclick="reiniciar()">🔄 Reiniciar</button>
 </div>
 
+<!-- HISTORIAL -->
 <div id="historial"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
